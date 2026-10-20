@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Egy csillag élete – a ködtől a fekete lyukig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05040a;--ink:#f4efe6;--mute:#a79fb4;--line:rgba(244,239,230,.16);--acc:#ffb347;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+header{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(18px + env(safe-area-inset-top,0px)) 5vw 18px}
+.logo{font-weight:800;font-size:1.2rem;letter-spacing:-.02em}
+nav{display:flex;gap:26px;font-size:.95rem}
+nav a{color:var(--mute);text-decoration:none;transition:color .2s}
+nav a:hover,nav a:focus-visible{color:var(--ink)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+.bar{position:fixed;left:0;top:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#8b5cf6,#ff7a2f,var(--acc));z-index:6}
+main{position:relative;z-index:2}
+section{min-height:100vh;display:flex;align-items:center;padding:12vh 5vw}
+.col{max-width:520px}
+.right .col{margin-left:auto}
+h1,h2{margin:0 0 .5em;line-height:.98;letter-spacing:-.035em;font-weight:800}
+h1{font-size:clamp(2.8rem,7.4vw,6.2rem)}
+h2{font-size:clamp(2.1rem,4.8vw,3.8rem)}
+p{color:var(--mute);font-size:1.1rem;line-height:1.6;margin:0 0 1.1em;max-width:48ch}
+.ln{display:block;overflow:hidden}
+.ln span{display:block;transform:translateY(110%);animation:up 1s cubic-bezier(.2,.8,.2,1) forwards}
+.ln:nth-child(2) span{animation-delay:.12s}.ln:nth-child(3) span{animation-delay:.24s}
+@keyframes up{to{transform:none}}
+ul.list{list-style:none;margin:0;padding:0}
+ul.list li{padding:18px 0;border-top:1px solid var(--line)}
+ul.list li:last-child{border-bottom:1px solid var(--line)}
+ul.list b{display:block;font-size:1.2rem;font-weight:500;margin-bottom:4px}
+ul.list span{color:var(--mute);line-height:1.5}
+.fact{color:var(--acc);font-weight:500}
+.calc{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.calc h3{margin:0 0 10px;font-size:1.15rem;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip,.ghost{background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 16px;font:inherit;font-size:.95rem;cursor:pointer;transition:background .2s,border-color .2s}
+.chip:hover,.ghost:hover{border-color:var(--acc)}
+.chip.on{background:var(--acc);color:#1b1206;border-color:var(--acc)}
+#rs{font-size:1.5rem;font-weight:500;margin-top:10px;min-height:2em}
+input{width:100%;margin:0 0 10px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font:inherit}
+input::placeholder{color:#7d7699}
+.btn{display:inline-block;padding:13px 24px;border-radius:999px;background:var(--ink);color:#1b1206;font-weight:800;text-decoration:none;border:0;cursor:pointer;font:inherit;font-weight:800;transition:transform .25s,background .25s}
+.btn:hover{transform:scale(1.04);background:var(--acc)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.hint{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;color:var(--mute);font-size:.85rem;transition:opacity .4s}
+.wide{max-width:1040px;width:100%;margin:0 auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
+.panel{background:rgba(8,6,16,.7);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:22px;padding:26px}
+.panel h3{margin:0 0 8px;font-size:1.35rem;letter-spacing:-.02em}
+.panel p{font-size:.97rem;margin-bottom:14px}
+#out,#st{margin-top:14px;line-height:1.55;color:var(--mute);font-size:.98rem;white-space:pre-wrap}
+#wall{list-style:none;margin:14px 0 0;padding:0;max-height:200px;overflow-y:auto}
+#wall li{padding:10px 0;border-top:1px solid var(--line);font-size:.95rem;line-height:1.4}
+#wall b{font-weight:500}#wall small{color:var(--mute);margin-left:8px}#wall span{display:block;color:var(--mute)}
+#hud{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:8;width:min(560px,92vw);text-align:center;background:rgba(5,4,10,.62);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:22px;padding:20px 22px}
+#hud[hidden]{display:none}
+.hrow{display:flex;gap:16px;justify-content:center}.hrow div{flex:1}.hrow small{display:block;color:var(--mute);font-size:.8rem;margin-bottom:2px}.hrow b{font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums}
+#ht{margin:12px auto;min-height:4.8em;font-size:1rem}
+section.st{min-height:125vh}
+h1,h2,p{text-shadow:0 2px 22px rgba(5,4,10,.85)}
+#stg{position:fixed;left:5vw;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:5;display:flex;align-items:center;gap:8px;color:var(--mute);font-size:.85rem;transition:opacity .4s}
+#stg i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .3s,transform .3s}
+#stg i.on{background:var(--acc);transform:scale(1.6)}
+#stg span{margin-left:6px;color:var(--ink)}
+footer{position:relative;z-index:2;text-align:center;color:var(--mute);padding:0 5vw 40px;font-size:.85rem}
+@media(max-width:800px){
+ nav{display:none}
+ section{align-items:flex-end;padding-bottom:12vh}
+ .right .col{margin-left:0}
+ .col{background:linear-gradient(transparent,rgba(5,4,10,.88) 28%);margin:0 -5vw;padding:44px 5vw 0;max-width:none}
+ .grid{grid-template-columns:1fr}.lab{align-items:center}
+}
+@media(prefers-reduced-motion:reduce){.ln span{animation:none;transform:none}}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<header><div class="logo">Csillagélet</div>
+<nav><a href="#s0">Kezdés</a><a href="#s4">Szupernóva</a><a href="#hero">Fekete lyuk</a><a href="#horizont">Horizont</a><a href="#labor">Labor</a></nav></header>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="hint" id="hint">Görgess, vagy mozgasd az egeret</div>
+
+<main>
+<section id="s0" class="st"><div class="col">
+  <h1><span class="ln"><span>Egy csillag</span></span><span class="ln"><span>élete a ködtől</span></span><span class="ln"><span>a fekete lyukig.</span></span></h1>
+  <p>Görgess lefelé, és végignézheted, hogyan születik, él és hal meg egy nagy tömegű csillag. Az animáció stilizált, de a folyamatok valósak.</p>
+  <p>Minden egy hideg gáz- és porfelhővel kezdődik, főleg hidrogénből és héliumból. Ha egy sűrűbb csomó gravitációja legyőzi a gáz nyomását, a felhő összehúzódni kezd.</p>
+</div></section>
+<section id="s1" class="st right"><div class="col">
+  <h2>Születés</h2>
+  <p>Az összehúzódó gáz forrósodik, a közepén protocsillag gyúl. A forgása miatt korong veszi körül, a pólusain pedig gázsugarak lövellnek ki.</p>
+  <p>Amikor a magban a hőmérséklet eléri a körülbelül 10 millió fokot, beindul a hidrogén fúziója: a csillag megszületett.</p>
+</div></section>
+<section id="s2" class="st"><div class="col">
+  <h2>Fősorozat</h2>
+  <p>Életének nagy részében a csillag hidrogént éget héliummá. A fúzió kifelé irányuló nyomása pontosan egyensúlyt tart a gravitációval.</p>
+  <p>A nagy tömegű csillagok forrók és kékesfehérek, de gyorsan élnek: csak néhány millió évig. A Nap ezzel szemben nagyjából tízmilliárd évig ég.</p>
+</div></section>
+<section id="s3" class="st right"><div class="col">
+  <h2>Vörös óriás</h2>
+  <p>Ha elfogy a hidrogén a magban, a mag összehúzódik, a külső rétegek pedig kitágulnak és lehűlnek. A csillag vörös óriássá dagad, a legnagyobbak vörös szuperóriássá. Közben egyre nehezebb elemeket égetnek.</p>
+  <p>A Nap nem lesz szupernóva: kisebb tömege miatt fehér törpeként fejezi be.</p>
+</div></section>
+<section id="s4" class="st"><div class="col">
+  <h2>Szupernóva</h2>
+  <p>A fúzió vasnál megáll, mert a vas egyesítése már nem termel energiát. A mag másodpercek alatt összeomlik, a visszapattanó lökéshullám pedig szétveti a csillag külső rétegeit.</p>
+  <p>Egy szupernóva rövid időre egy egész galaxis fényével vetekedhet.</p>
+</div></section>
+<section id="hero"><div class="col">
+  <h1><span class="ln"><span>Hová tűnik</span></span><span class="ln"><span>a fény, ha</span></span><span class="ln"><span>nincs kiút?</span></span></h1>
+  <p>Ha a megmaradt mag nagyjából 2–3 naptömegnél nehezebb, semmi sem állíthatja meg az összeomlást: megszületik a fekete lyuk. Görgess tovább, és megtudod, mi történik körülötte.</p>
+</div></section>
+
+<section id="alap" class="right"><div class="col">
+  <h2>Mi az a fekete lyuk?</h2>
+  <p>Olyan sűrű tömegkoncentráció, amelynek a gravitációja akkora, hogy a szökési sebesség meghaladja a fény sebességét. Mivel semmi nem mozoghat a fénynél gyorsabban, innen semmi sem szabadulhat.</p>
+  <p>Nem „lyuk” a szó hétköznapi értelmében: a tömeg egyszerűen nagyon kis térfogatba sűrűsödött.</p>
+  <div class="calc">
+    <h3>Mekkora lenne belőled fekete lyuk?</h3>
+    <div class="chips" id="chips"><button class="chip" data-m="3.003e-6">Föld</button><button class="chip on" data-m="1">Nap</button><button class="chip" data-m="4.3e6">Sgr A*</button><button class="chip" data-m="6.5e9">M87*</button></div>
+    <input id="ms" value="1" inputmode="decimal" aria-label="Tömeg naptömegben">
+    <span class="fact" style="font-size:.9rem">A tömeg naptömegben, a sugár a Schwarzschild-sugár: r = 2GM/c²</span>
+    <div id="rs" aria-live="polite"></div>
+  </div>
+</div></section>
+
+<section id="horizont"><div class="col">
+  <h2>Az eseményhorizont</h2>
+  <p>Ez az a képzeletbeli gömbfelület, amelyen túl nincs visszaút. Kívülről nézve a bezuhanó tárgy egyre lassabbnak és vörösebbnek látszik, mintha megfagyna. Aki beleesik, ebből semmit nem érez: az ő órája rendesen jár.</p>
+  <ul class="list">
+    <li><b>Idődilatáció</b><span>Erős gravitációban az idő lassabban telik, mint távolról nézve. Gyengébb formában ez a Földön is mérhető: a GPS-műholdak óráit korrigálni kell.</span></li>
+    <li><b>Spagettizáció</b><span>A gravitáció a lábadat jóval erősebben húzza, mint a fejedet, így a test megnyúlik. Kis tömegű lyuknál ez már a horizont előtt megtörténik, óriásinál csak utána.</span></li>
+  </ul>
+  <button class="btn" id="fall" style="margin-top:22px">Mi történik, ha beleesel?</button>
+</div></section>
+
+<section id="fajta" class="right"><div class="col">
+  <h2>Három méret</h2>
+  <ul class="list">
+    <li><b>Csillagtömegű</b><span>Néhány–néhány tíz naptömeg. Nagy csillagok összeomlásából keletkeznek.</span></li>
+    <li><b>Közepes tömegű</b><span>Nagyjából száztól százezer naptömegig. Ritkán találunk ilyet.</span></li>
+    <li><b>Szupernagy tömegű</b><span>Millió–milliárd naptömeg a galaxisok közepén. A Tejútrendszer közepén a Sagittarius A* kb. 4,3 millió naptömegű.</span></li>
+  </ul>
+  <p style="margin-top:18px">Az első kép egy fekete lyukról (az M87 galaxisé) 2019-ben készült az Event Horizon Telescope-pal, a sajátunkéról 2022-ben. Hawking elmélete szerint a fekete lyukak nagyon lassan elpárolognak, ezt azonban még nem sikerült megfigyelni.</p>
+</div></section>
+
+<section id="labor" class="lab"><div class="wide">
+  <h2>Kérdezz!</h2>
+  <p>Mit szeretnél tudni a fekete lyukakról? Claude közérthetően válaszol, a lyuk pedig felfényesedik, amíg gondolkodik.</p>
+  <div class="grid">
+    <div class="panel">
+      <h3>Kérdezd Claude-ot</h3>
+      <input id="q" maxlength="140" placeholder="pl. Mi történik, ha beleesek?" aria-label="Kérdésed">
+      <button class="btn" id="gen" disabled>Kérdés elküldése</button>
+      <div id="out" aria-live="polite">Kapcsolódás az AI-hoz…</div>
+    </div>
+    <div class="panel">
+      <h3>Kérdések fala</h3>
+      <p>Mit kérdeznél egy fekete lyuktól? Az üzenetek adatbázisban tárolódnak, és mindenkinek élőben megjelennek.</p>
+      <input id="nm" maxlength="24" placeholder="A neved" aria-label="A neved">
+      <input id="tx" maxlength="140" placeholder="Üzenet" aria-label="Üzenet">
+      <button class="btn" id="snd" disabled>Üzenet küldése</button>
+      <button class="ghost" id="pm" hidden>Engedélyek megadása</button>
+      <div id="st" aria-live="polite">Kapcsolódás az adatbázishoz…</div>
+      <ul id="wall"></ul>
+    </div>
+  </div>
+</div></section>
+</main>
+<div id="stg"><span id="stn"></span></div>
+<div id="hud" hidden><div class="hrow"><div><small>A te órád</small><b id="c1">0.0 s</b></div><div><small>Távoli megfigyelő látja</small><b id="c2">0.0 s</b></div></div><p id="ht"></p><button class="ghost" id="fx">Vissza (Esc)</button></div>
+<footer>Ismeretterjesztő összefoglaló. Források: NASA, Event Horizon Telescope.</footer>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  // Schwarzschild-sugár
+  function fmt(n){return n.toLocaleString('hu-HU',{maximumSignificantDigits:3})}
+  function calc(){
+    var m=parseFloat(String($('ms').value).replace(',','.')),o=$('rs');
+    if(!(m>0)){o.textContent='Adj meg pozitív számot.';return;}
+    var km=2.953*m,r;
+    if(km<1e-3)r=fmt(km*1e6)+' mm';else if(km<1)r=fmt(km*1e3)+' m';else if(km<1e6)r=fmt(km)+' km';else r=fmt(km/1e6)+' millió km';
+    o.textContent='Sugár: '+r;
+  }
+  $('ms').oninput=function(){document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on')});calc();};
+  document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){
+    document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});c.classList.add('on');
+    $('ms').value=c.dataset.m;calc();};});
+  calc();
+  function emsg(e){var c=e&&e.code;return c==='not_granted'?'Engedély nélkül ez nem működik.':c==='rate_limited'?'Túl sok kérés, várj egy kicsit.':'Hiba történt, próbáld újra.';}
+  // AI
+  var sample=null;
+  if(window.claude)window.claude.use('sample').then(function(s){sample=s;$('out').textContent=s?'Írd be a kérdésed.':'Az AI funkció ebben a nézetben nem érhető el.';$('gen').disabled=!s;}).catch(function(){$('out').textContent='Az AI funkció nem érhető el.';});
+  else $('out').textContent='Az AI funkció nem érhető el.';
+  $('gen').onclick=async function(){
+    var q=$('q').value.trim();if(!q||!sample)return;
+    var b=$('gen'),o=$('out');b.disabled=true;o.textContent='Claude gondolkodik…';
+    if(window.__ov)window.__ov.tk=1;
+    try{
+      var r=await sample('Csillagász ismeretterjesztő vagy. Magyarul, közérthetően (egy 14 éves is értse), legfeljebb 4 mondatban válaszolj. Ne találj ki tényeket, ha nem vagy biztos, mondd meg. Ha a kérdés nem kapcsolódik a fekete lyukakhoz vagy az asztrofizikához, udvariasan tereld vissza arra. Kérdés: „'+q+'”');
+      o.textContent=String(r.text||'');
+    }catch(e){o.textContent=emsg(e);}
+    if(window.__ov)window.__ov.tk=0;b.disabled=false;
+  };
+  // Adatbázis
+  var col=null,local=[];
+  function render(s){
+    var ul=$('wall');ul.textContent='';
+    if(s.empty){var e=document.createElement('li');e.textContent='Még nincs üzenet. Légy te az első!';ul.appendChild(e);return;}
+    s.docs.forEach(function(d){
+      var v=d.data()||{},li=document.createElement('li'),b=document.createElement('b'),sm=document.createElement('small'),sp=document.createElement('span');
+      b.textContent=String(v.name||'Névtelen');
+      sm.textContent=v.ts?new Date(v.ts).toLocaleTimeString('hu-HU',{hour:'2-digit',minute:'2-digit'}):'';
+      sp.textContent=String(v.text||'');
+      li.appendChild(b);li.appendChild(sm);li.appendChild(sp);ul.appendChild(li);
+    });
+  }
+  function rl(){render({empty:!local.length,docs:local.map(function(v){return{data:function(){return v}}})});}
+  function noDb(m){col=null;$('st').textContent=m+' Helyi módban működik: az üzenetet most csak te látod.';$('snd').disabled=false;$('pm').hidden=false;rl();}
+  $('pm').onclick=async function(){try{var pr=await window.claude.use('permissions');await pr.request();}catch(e){}initDb();};
+  function initDb(){
+    if(!window.claude){noDb('Az adatbázis nem érhető el.');return;}
+    window.claude.use('db').then(function(d){
+      if(!d){noDb('Az adatbázis ebben a nézetben nem érhető el (jelentkezz be a claude.ai-ra, vagy adj engedélyt).');return;}
+      $('pm').hidden=true;col=d.collection('wall');
+      col.orderBy('ts','desc').limit(20).onSnapshot(render,function(){$('st').textContent='Az üzenetek nem tölthetők be.';});
+      $('snd').disabled=false;$('st').textContent='Élő kapcsolat kész.';
+    }).catch(function(){noDb('Az adatbázis nem érhető el.');});
+  }
+  initDb();
+  $('snd').onclick=async function(){
+    var n=$('nm').value.trim(),t=$('tx').value.trim();
+    if(!n||!t){$('st').textContent='Add meg a neved és az üzenetet.';return;}
+    if(!col){local.unshift({name:n.slice(0,24),text:t.slice(0,140),ts:Date.now()});rl();$('tx').value='';return;}
+    var b=$('snd');b.disabled=true;
+    try{await col.add({name:n.slice(0,24),text:t.slice(0,140),ts:Date.now()});$('tx').value='';$('st').textContent='Elküldve.';}
+    catch(e){$('st').textContent=emsg(e);}
+    b.disabled=false;
+  };
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  var canvas=document.getElementById('gl'),renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:false,alpha:false});}
+  catch(e){canvas.style.display='none';document.getElementById('hint').textContent='A 3D megjelenítéshez WebGL szükséges.';return;}
+  var dpr=window.devicePixelRatio||1;
+  renderer.setPixelRatio(window.innerWidth<800?1:Math.min(dpr,1.5));
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FS=`
+uniform vec2 uRes,uC;uniform float uD,uE,uRoll,uAz,uT,uB,uPl,uFade;
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float h31(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.x+p.y)*p.z);}
+float pn(vec2 p,float per){
+  vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  float y0=mod(i.y,per),y1=mod(i.y+1.,per);
+  return mix(mix(h21(vec2(i.x,y0)),h21(vec2(i.x+1.,y0)),f.x),mix(h21(vec2(i.x,y1)),h21(vec2(i.x+1.,y1)),f.x),f.y);}
+vec3 ramp(float t){
+  vec3 c=mix(vec3(.22,.07,.025),vec3(.95,.45,.14),smoothstep(0.,.7,t));
+  c=mix(c,vec3(1.,.82,.55),smoothstep(.6,1.2,t));
+  return mix(c,vec3(1.,.97,.92),smoothstep(1.2,2.,t));}
+vec3 stars(vec3 d){
+  vec3 p=d*70.,i=floor(p),f=fract(p)-.5;float h=h31(i);
+  float s=(1.-smoothstep(0.,.24,length(f)))*step(.988,h);
+  return s*(.35+(h-.988)*40.)*mix(vec3(.8,.9,1.),vec3(1.,.85,.7),h31(i+7.));}
+void main(){
+  float asp=uRes.x/uRes.y;vec2 p=gl_FragCoord.xy/uRes*2.-1.;p.x*=asp;
+  vec2 q=p-uC;float c=cos(uRoll),s=sin(uRoll);q=vec2(c*q.x+s*q.y,-s*q.x+c*q.y);
+  vec3 ro=uD*vec3(sin(uAz)*cos(uE),sin(uE),cos(uAz)*cos(uE));
+  vec3 fw=-normalize(ro),rt=normalize(cross(fw,vec3(0.,1.,0.))),up=cross(rt,fw);
+  vec3 v=normalize(fw+(rt*q.x+up*q.y)*.4142);
+  vec3 pos=ro,col=vec3(0.);float tr=1.;
+  float rin=2.4,rout=14.,resc=uD*1.15+3.;
+  for(int i=0;i<200;i++){
+    float r=length(pos);
+    if(r<1.){tr=0.;break;}
+    if(r>resc&&dot(pos,v)>0.){col+=tr*stars(v);break;}
+    float dt=clamp(.12*(r-.85),.03,1.5);
+    vec3 hv=cross(pos,v);float h2=dot(hv,hv);
+    v=normalize(v-1.5*h2*pos/(r*r*r*r*r)*dt);
+    vec3 pr=pos;pos+=v*dt;
+    float rxz=length(pos.xz);
+    col+=tr*vec3(1.,.5,.22)*.014*dt*exp(-3.5*abs(pos.y))*pow(rin/max(rxz,rin),2.)*(1.-smoothstep(rin*2.,rout,rxz));
+    if(pr.y*pos.y<0.){
+      float tt=pr.y/(pr.y-pos.y);vec3 qq=mix(pr,pos,tt);float rq=length(qq.xz);
+      if(rq>rin&&rq<rout){
+        vec3 td=normalize(vec3(qq.z,0.,-qq.x));
+        float vo=min(sqrt(.5/max(rq-1.,.2)),.62),g=1./sqrt(1.-vo*vo);
+        float dl=1./(g*(1.-vo*dot(td,-v)));dl*=sqrt(max(1.-1./rq,.05));
+        float a=atan(qq.z,qq.x)/6.28318+uT*.3*pow(rq,-1.5);
+        float t1=.55*pn(vec2(rq*18.,a*28.),28.)+.3*pn(vec2(rq*55.,a*60.),60.)+.15*pn(vec2(rq*5.,a*10.),10.);
+        float tex=.2+1.7*smoothstep(.25,.75,t1);
+        float I=pow(rin/rq,2.2)*tex;
+        vec3 em=ramp(1.15*pow(rin/rq,.7)*dl)*I*pow(dl,2.4)*1.5;
+        float al=.9*smoothstep(rin,rin+.25,rq)*(1.-smoothstep(rout*.6,rout,rq))*clamp(.35+tex*.5,0.,1.);
+        col+=tr*em*al;tr*=1.-al*.85;
+      }
+    }
+  }
+  col=max(col*(1.+uB*.9),0.);col=1.-exp(-col*1.25);
+  float sa=min(.99,2.598*sqrt(max(1.-1./uD,.02))/uD);float R=sa/sqrt(1.-sa*sa)/.4142;
+  vec2 off=vec2(-2.75*R,-.06*R);vec2 pc=uC+vec2(c*off.x-s*off.y,s*off.x+c*off.y);
+  float pd=length(p-pc)/(.07*R);vec2 nn=normalize(p-pc+1e-5),ld=normalize(uC-pc);
+  float lit=pow(max(dot(nn,ld),0.),3.)*smoothstep(.3,1.,pd)*.9;
+  col=mix(col,vec3(.012)+vec3(1.,.75,.45)*lit,(1.-smoothstep(.9,1.,pd))*uPl);
+  gl_FragColor=vec4(col*uFade,1.);
+}`;
+  var mat=new THREE.ShaderMaterial({transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,
+    uniforms:{uRes:{value:new THREE.Vector2(1,1)},uC:{value:new THREE.Vector2()},uD:{value:11.6},uE:{value:.13},uRoll:{value:.18},uAz:{value:0},uT:{value:0},uB:{value:0},uPl:{value:1},uFade:{value:0}},
+    vertexShader:'void main(){gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:FS});
+  var scene=new THREE.Scene(),cam=new THREE.Camera(),quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat);
+  quad.frustumCulled=false;scene.add(quad);
+  var SFS=`
+uniform vec2 uRes,uC;uniform vec3 uCol;uniform float uT,uCs,uCl,uRc,uCb,uGr,uGs,uCr,uJet,uSr,uSi,uFl,uFade;
+float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),f.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),f.x),f.y);}
+float fbm(vec2 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*vn(p);p=p*2.03+vec2(13.1,7.7);a*=.5;}return s;}
+void main(){
+  float asp=uRes.x/uRes.y;vec2 p=gl_FragCoord.xy/uRes*2.-1.;p.x*=asp;
+  vec2 q=p-uC;float r=length(q),ang=atan(q.y,q.x);
+  vec3 col=vec3(.006,.005,.012);
+  vec2 sp=gl_FragCoord.xy/uRes.y*55.;float sh=h21(floor(sp));
+  col+=step(.965,sh)*(1.-smoothstep(0.,.3,length(fract(sp)-.5)))*(.4+.6*sin(uT*2.+sh*40.))*vec3(.8,.85,1.)*.7;
+  if(uCl>.001){
+    float rr=r/uCs,sw=1.4/(.3+rr)*.35+uT*.03,ca=cos(sw),sa=sin(sw);
+    vec2 w=mat2(ca,-sa,sa,ca)*q/uCs;
+    float n1=fbm(w*1.6+uT*.02),n2=fbm(w*3.+n1*2.5-uT*.03);
+    float dens=n2*exp(-rr*rr*.35)*(.5+.9*smoothstep(0.,1.,n1));
+    vec3 nc=mix(vec3(.55,.12,.45),vec3(.15,.35,.9),n1);nc=mix(nc,vec3(1.,.5,.2),pow(n2,3.)*1.5);
+    col+=nc*dens*dens*3.*uCl;
+  }
+  float jx=abs(q.x),jy=abs(q.y);
+  float jet=exp(-jx*(10.+9.*jy))*exp(-jy*1.1)*smoothstep(.04,.2,jy)*(.5+.8*fbm(vec2(q.x*30.,q.y*4.-uT*2.5)));
+  col+=vec3(.45,.65,1.)*jet*uJet*1.6;
+  float R=max(uRc,.001),x=r/R;
+  float gran=fbm(q/R*uGs+vec2(uT*.07,0.))*.6+fbm(q/R*uGs*2.7-uT*.1)*.4;
+  float mu=sqrt(max(1.-x*x,0.)),body=1.-smoothstep(.97,1.,x);
+  vec3 surf=uCol*(.35+.65*mu)*(1.+uGr*(gran-.5)*2.2);
+  surf=mix(surf,vec3(1.),pow(mu,6.)*.35);
+  col=mix(col,surf*uCb,body);
+  float g=exp(-max(r-R,0.)/(R*.5+.05)*1.6)*(1.-body);
+  float fl=.7+.5*fbm(vec2(ang*3.,uT*.3)+r*2.);
+  col+=uCol*g*fl*.45*uCr*uCb;
+  col+=uCol*exp(-r*3./(R*2.+.2))*.12*uCr;
+  float spk=exp(-abs(q.y)*60.)*exp(-abs(q.x)*1.6)+exp(-abs(q.x)*60.)*exp(-abs(q.y)*1.6);
+  col+=mix(uCol,vec3(1.),.5)*spk*.22*uCb*min(1.,uCr);
+  if(uSr>.001){
+    float d=r-uSr,shl=exp(-d*d*(30./(uSr+.1)));
+    float fil=fbm(vec2(ang*5.+fbm(q*3.)*3.,r*6.-uT*.3));
+    vec3 sc=mix(vec3(.2,.5,1.),vec3(1.,.45,.15),smoothstep(.2,.9,fil));
+    col+=sc*shl*(.4+1.6*fil)*uSi;
+    col+=vec3(1.,.55,.25)*exp(-r*r/(uSr*uSr+.02))*fbm(q*3.+uT*.1)*.5*uSi;
+  }
+  col+=vec3(1.,.95,.9)*uFl*(1.8*exp(-r*1.8)+.4);
+  col=1.-exp(-col*1.2);
+  gl_FragColor=vec4(col*uFade,1.);
+}`;
+  var SU={uRes:{value:new THREE.Vector2(1,1)},uC:{value:new THREE.Vector2()},uCol:{value:new THREE.Vector3(1,1,1)},uT:{value:0},uCs:{value:1},uCl:{value:0},uRc:{value:0},uCb:{value:0},uGr:{value:0},uGs:{value:6},uCr:{value:0},uJet:{value:0},uSr:{value:0},uSi:{value:0},uFl:{value:0},uFade:{value:1}};
+  var starQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms:SU,vertexShader:'void main(){gl_Position=vec4(position.xy,0.,1.);}',fragmentShader:SFS}));
+  starQuad.frustumCulled=false;scene.add(starQuad);
+  var bhQuad=quad;
+  var TT=[0,1,2,3,3.8,4,4.15,4.6,5],KS=[.5,-.5,.5,-.5,.5,.5];
+  var PA={cs:[1.6,.55,.28,.2,.2,.2,.2,.1,.1],cl:[1,.9,.25,.1,.05,0,0,0,0],rc:[.01,.1,.26,.95,.88,.35,0,0,0],cb:[0,1.2,1.6,1.2,1.6,3.5,0,0,0],
+    gr:[0,.3,.7,1,1,.6,0,0,0],gs:[6,6,9,3.2,3.2,3.2,3.2,3.2,3.2],cr:[0,1,1.2,1,1.4,2.2,0,0,0],jet:[0,1,0,0,0,0,0,0,0],
+    sr:[0,0,0,0,0,.05,.4,1.6,3.2],si:[0,0,0,0,0,1.6,1.3,.7,0],fl:[0,0,0,0,.1,1,.35,0,0],
+    r:[1,1,.65,1,1,1,1,1,1],g:[.7,.7,.8,.3,.5,.9,.9,.9,.9],b:[.45,.45,1,.08,.2,.8,.8,.8,.8]};
+  function KF(a,s){var x=Math.min(s,5),k=0;while(k<7&&x>=TT[k+1])k++;var t=Math.min(1,Math.max(0,(x-TT[k])/(TT[k+1]-TT[k])));t=t*t*(3-2*t);return a[k]+(a[k+1]-a[k])*t;}
+  var stg=document.getElementById('stg'),NM=['Gázfelhő','Protocsillag','Fősorozat','Vörös óriás','Szupernóva','Fekete lyuk'];
+  for(var d0=0;d0<6;d0++)stg.insertBefore(document.createElement('i'),stg.lastChild);
+  function stgSet(n){var is=stg.querySelectorAll('i');for(var j=0;j<is.length;j++)is[j].className=j===n?'on':'';document.getElementById('stn').textContent=NM[Math.min(n,5)]||'';stg.style.opacity=n>5?0:1;}
+
+  var U=mat.uniforms,tmp=new THREE.Vector2();
+  function size(){renderer.setSize(window.innerWidth,window.innerHeight,false);renderer.getDrawingBufferSize(tmp);U.uRes.value.copy(tmp);SU.uRes.value.copy(tmp);}
+  window.addEventListener('resize',size);size();
+  // cx (az ablak félszélességének törtrésze), cy, skála, emelkedési szög, dőlés
+  var K=[[.5,.1,1,.13,.18],[-.5,.05,1.05,.3,-.1],[.5,0,1.15,.07,.12],[-.5,.05,.95,.4,.2],[0,.62,.5,.22,.1]];
+  function sm(t){return t*t*(3-2*t)}
+  var ov=window.__ov={k:0,tk:0};
+  var fall={on:false,t:0,fw:0,d:1,obs:0,st:-1},hud=document.getElementById('hud'),mainEl=document.querySelector('main');
+  var TX=['Távolról még minden nyugodt. A lyuk gravitációja alig lassítja az időt.','Közeledsz. A távoli megfigyelő már lassabbnak látja az órádat, a fény pedig vörösebb.','A horizont közelében az árapályerő rohamosan nő. Kisebb lyuknál ez már most elnyújtana.','Átléped a horizontot. Te ezt nem érzed, de kifelé már nincs út. A távoli megfigyelő számára az órád gyakorlatilag megállt.'];
+  fall.hud=function(f){
+    if(!fall.on)return;
+    var st=f<.3?0:f<.6?1:f<.9?2:3;
+    if(st!==fall.st){fall.st=st;document.getElementById('ht').textContent=TX[st];}
+    document.getElementById('c1').textContent=fall.t.toFixed(1)+' s';
+    document.getElementById('c2').textContent=fall.obs.toFixed(1)+' s ('+Math.round(fall.d*100)+'%)';
+  };
+  function startFall(){fall.on=true;fall.t=0;fall.obs=0;fall.st=-1;hud.hidden=false;document.body.style.overflow='hidden';}
+  function endFall(){fall.on=false;hud.hidden=true;document.body.style.overflow='';}
+  document.getElementById('fall').onclick=startFall;document.getElementById('fx').onclick=endFall;
+  window.addEventListener('keydown',function(e){if(e.key==='Escape')endFall();});
+  var s=0,mx=0,my=0,tmx=0,tmy=0,clock=new THREE.Clock(),bar=document.getElementById('bar'),hint=document.getElementById('hint');
+  window.addEventListener('pointermove',function(e){tmx=e.clientX/window.innerWidth*2-1;tmy=e.clientY/window.innerHeight*2-1;});
+  function frame(){
+    var raw=clock.getElapsedTime(),t=raw*(reduce?.2:1),dt=Math.min(.1,raw-(window.__lr||raw));window.__lr=raw;
+    var max=document.documentElement.scrollHeight-window.innerHeight;
+    var p=max>0?window.scrollY/max:0;
+    s+=(p-s)*.06;mx+=(tmx-mx)*.05;my+=(tmy-my)*.05;ov.k+=(ov.tk-ov.k)*.05;
+    var secs=window.__secs||(window.__secs=[].slice.call(document.querySelectorAll("main section"))),sy=window.scrollY+window.innerHeight*.5,sx=0;
+    for(var kk=0;kk<secs.length;kk++){if(secs[kk].offsetTop<=sy)sx=kk;}
+    var sidx=sx+Math.min(1,Math.max(0,(sy-secs[sx].offsetTop)/secs[sx].offsetHeight));
+    var f=Math.min(1,Math.max(0,(sidx-5)/4))*(K.length-1),i=Math.min(Math.floor(f),K.length-2),u=sm(f-i),a=K[i],b=K[i+1];
+    function L(j){return a[j]+(b[j]-a[j])*u}
+    var mob=window.innerWidth<800,asp=window.innerWidth/window.innerHeight;
+    if(fall.on&&fall.t<14){fall.t+=dt;var r0=1.0005+7*Math.pow(1-Math.min(1,fall.t/14),2);fall.d=Math.sqrt(1-1/r0);fall.obs+=dt*fall.d;}
+    if(!fall.on&&fall.fw<.01)fall.t=0;
+    fall.fw+=((fall.on?1:0)-fall.fw)*.05;
+    var f0=Math.min(1,fall.t/14),fw=fall.fw;fall.hud(f0);
+    mainEl.style.opacity=1-fw*.97;mainEl.style.pointerEvents=fw>.5?'none':'';
+    var sc=L(2)*(mob?.8:1),cx=(mob?0:L(0)*asp)*(1-fw),cy=((mob?.5+L(1):L(1)))*(1-fw);
+    U.uC.value.set(cx,cy);
+    var bm=1+1.6*(1-sm(Math.min(1,Math.max(0,(sidx-4.3)/.7))));U.uD.value=(11.6/sc*bm)*(1-fw)+(11.6-9.3*f0)*fw;
+    U.uE.value=(L(3)-my*.12)*(1-fw)+.35*fw;
+    U.uRoll.value=L(4)*(1-fw)+.05*fw;
+    U.uAz.value=mx*.3;
+    U.uT.value=t;
+    U.uB.value=ov.k-fw*.75*(.3+f0);
+    U.uPl.value=1-fw;
+    U.uFade.value=sm(Math.min(1,Math.max(0,(sidx-4.4)/.55)));
+    var x5=Math.min(sidx,5),k2=Math.min(4,Math.floor(x5)),scx=KS[k2]+(KS[k2+1]-KS[k2])*sm(x5-k2);
+    SU.uC.value.set(mob?0:scx*asp,mob?.5:.06);
+    SU.uT.value=t;SU.uCs.value=Math.max(.05,KF(PA.cs,sidx));SU.uCl.value=KF(PA.cl,sidx);SU.uRc.value=KF(PA.rc,sidx);SU.uCb.value=KF(PA.cb,sidx);
+    SU.uGr.value=KF(PA.gr,sidx);SU.uGs.value=KF(PA.gs,sidx);SU.uCr.value=KF(PA.cr,sidx);SU.uJet.value=KF(PA.jet,sidx);
+    SU.uSr.value=KF(PA.sr,sidx);SU.uSi.value=KF(PA.si,sidx);SU.uFl.value=KF(PA.fl,sidx);
+    SU.uCol.value.set(KF(PA.r,sidx),KF(PA.g,sidx),KF(PA.b,sidx));
+    SU.uFade.value=1-sm(Math.min(1,Math.max(0,(sidx-4.7)/.35)));
+    starQuad.visible=sidx<5.1&&fw<.01;bhQuad.visible=sidx>4.3||fw>.01;
+    var sn=Math.round(sidx);if(sn!==window.__sn){window.__sn=sn;stgSet(sn);}
+
+    bar.style.transform='scaleX('+p+')';
+    hint.style.opacity=p>.03?0:1;
+    renderer.render(scene,cam);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
